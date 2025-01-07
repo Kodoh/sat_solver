@@ -88,6 +88,7 @@ std::pair<CNF, Clause> simplifyFormula(const CNF& formula, const std::vector<int
 
         if (!satisfied) {
             if (new_clause.empty()) {
+                std::cout<<"CONFLICT" << std::endl;
                 conflict_clause = clause; // Preserve the original conflicting clause
             } else {
                 simplified.push_back(new_clause);

@@ -86,7 +86,7 @@ int backtrack(const Clause& learned_clause, Levels& levels, std::stack<std::pair
 
 // Updated unitPropagate with debug messages
 bool unitPropagate(CNF& formula, std::vector<int>& assignments, Levels& levels,
-    std::unordered_map<int, Clause>& reason_clauses, int current_level) {
+                   std::unordered_map<int, Clause>& reason_clauses, int current_level) {
     bool updated = true;
 
     while (updated) {
@@ -100,19 +100,28 @@ bool unitPropagate(CNF& formula, std::vector<int>& assignments, Levels& levels,
                 return false;
             }
 
-            if (it->size() == 1) {
+            if (it->size() == 1) { // Unit clause found
                 int literal = it->front();
                 int var = std::abs(literal);
 
-                if (assignments[var - 1] == 0) {
+                if (assignments[var - 1] == 0) { // Variable is unassigned
                     assignments[var - 1] = (literal > 0) ? 1 : -1;
                     levels[var - 1] = {assignments[var - 1], current_level};
-                    reason_clauses[var] = *it;
+                    reason_clauses[var] = *it; // Record reason for this assignment
 
                     std::cout << "Unit propagation: Assigning x" << var << " = " 
                               << ((literal > 0) ? "True" : "False") << "\n";
 
-                    formula = simplifyFormula(formula, assignments).first;
+                    auto [simplified_formula, conflict_clause] = simplifyFormula(formula, assignments);
+                    formula = simplified_formula;
+
+                    if (!conflict_clause.empty()) { // Conflict detected
+                        std::cout << "Conflict detected after simplification with clause: ";
+                        printClause(conflict_clause);
+                        std::cout << "\n";
+                        return false;
+                    }
+
                     updated = true;
                     it = formula.begin();
                 } else {
@@ -126,6 +135,8 @@ bool unitPropagate(CNF& formula, std::vector<int>& assignments, Levels& levels,
 
     return true;
 }
+
+
 
 // Updated dpll with debug messages
 bool dpll(CNF formula, std::vector<int>& assignments) {
